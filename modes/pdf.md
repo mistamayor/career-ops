@@ -15,11 +15,69 @@
 9. Reordena bullets de experiencia por relevancia al JD
 10. Construye competency grid desde requisitos del JD (6-8 keyword phrases)
 11. Inyecta keywords naturalmente en logros existentes (NUNCA inventa)
-12. Genera HTML completo desde template + contenido personalizado
+11b. **Persiste el CV personalizado como markdown**: escribe el contenido del CV totalmente personalizado (post inyección de keywords, post reordenamiento) a `output/cv-{candidate}-{company}-{YYYY-MM-DD}.md` ANTES de generar el HTML. Es la fuente markdown estructurada que la capa de sincronización de Career-Ops Web consume para el renderizado de PDF custom en Fase 2.
+
+    Estructura del archivo markdown emitido:
+
+    ```markdown
+    ---
+    candidate: {candidate}
+    company: {company}
+    date: {YYYY-MM-DD}
+    archetype: {detected archetype}
+    target_role: {role from JD}
+    keyword_coverage_pct: {percentage}
+    jd_url: {url if provided, else empty}
+    ---
+
+    # {Candidate Name}
+    {target role line, e.g. "Head of IT | Digital Transformation Leader"}
+
+    ## Professional Summary
+    {rewritten summary with JD keywords injected}
+
+    ## Core Competencies
+    - {keyword phrase 1}
+    - {keyword phrase 2}
+    ...
+
+    ## Work Experience
+
+    ### {Company} — {Role}
+    {Start date} – {End date}
+
+    - {reordered bullet 1}
+    - {reordered bullet 2}
+    ...
+
+    ## Projects
+
+    ### {Project name}
+    {One-line context}
+    - {bullet 1}
+    - {bullet 2}
+
+    ## Education
+
+    - {Degree} — {Institution}, {Year}
+
+    ## Certifications
+
+    - {Cert 1}
+    - {Cert 2}
+    ```
+
+    Usa YAML frontmatter para los metadatos (candidate, company, date, archetype, target_role, keyword_coverage_pct, jd_url). Mantén los headings EXACTAMENTE como se especifican arriba — nuestros parsers dependen de esa estructura. Sin HTML en el archivo markdown. Sin tags/keyword classes (esas son preocupaciones de renderizado, no de contenido).
+
+12. Genera HTML completo desde template + contenido personalizado (usando el mismo contenido escrito en el paso 11b)
 13. Lee `name` de `config/profile.yml` → normaliza a kebab-case lowercase (e.g. "John Doe" → "john-doe") → `{candidate}`
 14. Escribe HTML a `/tmp/cv-{candidate}-{company}.html`
 15. Ejecuta: `node generate-pdf.mjs /tmp/cv-{candidate}-{company}.html output/cv-{candidate}-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
-15. Reporta: ruta del PDF, nº páginas, % cobertura de keywords
+16. Reporta:
+    - Ruta del PDF
+    - Ruta del markdown tailored: `output/cv-{candidate}-{company}-{YYYY-MM-DD}.md`
+    - Número de páginas
+    - % cobertura de keywords
 
 ## Reglas ATS (parseo limpio)
 
