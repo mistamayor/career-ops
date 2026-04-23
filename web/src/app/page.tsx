@@ -1,17 +1,14 @@
 import { AppShell } from "@/components/app-shell";
-import { listApplications } from "@/lib/pb";
+import { KanbanBoard } from "@/components/kanban/kanban-board";
+import { NewApplicationDialog } from "@/components/new-application-dialog";
 
 export default async function PipelinePage() {
-  const apps = await listApplications();
-
   return (
     <AppShell title="Pipeline">
-      <div className="p-6">
-        <div className="text-muted-foreground rounded-md border border-dashed p-8 text-center text-sm">
-          Kanban lands in Prompt 5 — {apps.length} applications loaded from
-          PocketBase.
-        </div>
+      <div className="flex items-center justify-end gap-3 px-4 pt-4">
+        <NewApplicationDialog />
       </div>
+      <KanbanBoard />
     </AppShell>
   );
 }

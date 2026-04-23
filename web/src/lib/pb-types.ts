@@ -120,6 +120,7 @@ export type ApplicationsRecord = {
 	archetype?: string
 	comp_range?: string
 	company: string
+	created: IsoAutoDateString
 	cv_version?: RecordIdString
 	evaluation_report_md?: string
 	evaluation_report_path?: string
@@ -133,9 +134,11 @@ export type ApplicationsRecord = {
 	pinned?: boolean
 	role: string
 	status: ApplicationsStatusOptions
+	updated: IsoAutoDateString
 }
 
 export type CvTemplatesRecord = {
+	created: IsoAutoDateString
 	css: string
 	html_template: string
 	id: string
@@ -143,6 +146,7 @@ export type CvTemplatesRecord = {
 	name: string
 	preview_image?: FileNameString
 	slug: string
+	updated: IsoAutoDateString
 }
 
 export const CvVersionsSourceOptions = {
@@ -152,6 +156,7 @@ export const CvVersionsSourceOptions = {
 } as const
 export type CvVersionsSourceOptions = typeof CvVersionsSourceOptions[keyof typeof CvVersionsSourceOptions]
 export type CvVersionsRecord = {
+	created: IsoAutoDateString
 	id: string
 	label: string
 	markdown: string
@@ -160,6 +165,7 @@ export type CvVersionsRecord = {
 	source: CvVersionsSourceOptions
 	target_archetype?: string
 	template?: RecordIdString
+	updated: IsoAutoDateString
 }
 
 export const EventsTypeOptions = {
@@ -179,10 +185,12 @@ export const EventsTypeOptions = {
 export type EventsTypeOptions = typeof EventsTypeOptions[keyof typeof EventsTypeOptions]
 export type EventsRecord<Tpayload = unknown> = {
 	application: RecordIdString
+	created: IsoAutoDateString
 	id: string
 	occurred_at: IsoDateString
 	payload?: null | Tpayload
 	type: EventsTypeOptions
+	updated: IsoAutoDateString
 }
 
 export const JobsTypeOptions = {
@@ -203,6 +211,7 @@ export const JobsStatusOptions = {
 export type JobsStatusOptions = typeof JobsStatusOptions[keyof typeof JobsStatusOptions]
 export type JobsRecord<Tinput = unknown, Toutput = unknown> = {
 	application?: RecordIdString
+	created: IsoAutoDateString
 	error?: string
 	finished_at?: IsoDateString
 	id: string
@@ -212,6 +221,7 @@ export type JobsRecord<Tinput = unknown, Toutput = unknown> = {
 	started_at?: IsoDateString
 	status: JobsStatusOptions
 	type: JobsTypeOptions
+	updated: IsoAutoDateString
 }
 
 export type UsersRecord = {

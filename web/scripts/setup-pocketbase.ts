@@ -118,6 +118,13 @@ function specToPbField(
       return { name: f.name, type: "date", required };
     case "json":
       return { name: f.name, type: "json", required };
+    case "autodate":
+      return {
+        name: f.name,
+        type: "autodate",
+        onCreate: f.onCreate,
+        onUpdate: f.onUpdate,
+      };
     case "select":
       return {
         name: f.name,

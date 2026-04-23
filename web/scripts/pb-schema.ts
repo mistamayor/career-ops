@@ -42,6 +42,17 @@ export type UrlField = { type: "url"; name: string; required?: boolean };
 export type DateField = { type: "date"; name: string; required?: boolean };
 export type JsonField = { type: "json"; name: string; required?: boolean };
 
+export type AutodateField = {
+  type: "autodate";
+  name: string;
+  /** Stamp the field on record creation. */
+  onCreate: boolean;
+  /** Stamp the field on every record update. */
+  onUpdate: boolean;
+  /** Unused for autodates; accepted only to keep the union shape uniform. */
+  required?: boolean;
+};
+
 export type SelectField = {
   type: "select";
   name: string;
@@ -80,7 +91,8 @@ export type FieldSpec =
   | JsonField
   | SelectField
   | RelationField
-  | FileField;
+  | FileField
+  | AutodateField;
 
 export interface CollectionSpec {
   name: string;
@@ -114,6 +126,8 @@ export const collections: CollectionSpec[] = [
         mimeTypes: ["image/png", "image/jpeg", "image/webp"],
       },
       { type: "bool", name: "is_default" },
+      { type: "autodate", name: "created", onCreate: true, onUpdate: false },
+      { type: "autodate", name: "updated", onCreate: true, onUpdate: true },
     ],
     indexes: [
       "CREATE UNIQUE INDEX idx_cv_templates_slug ON cv_templates (slug)",
@@ -159,6 +173,8 @@ export const collections: CollectionSpec[] = [
         cascadeDelete: false,
       },
       { type: "text", name: "target_archetype" },
+      { type: "autodate", name: "created", onCreate: true, onUpdate: false },
+      { type: "autodate", name: "updated", onCreate: true, onUpdate: true },
     ],
   },
 
@@ -209,6 +225,8 @@ export const collections: CollectionSpec[] = [
       { type: "text", name: "evaluation_report_path" },
       { type: "text", name: "notes" },
       { type: "bool", name: "pinned" },
+      { type: "autodate", name: "created", onCreate: true, onUpdate: false },
+      { type: "autodate", name: "updated", onCreate: true, onUpdate: true },
     ],
     indexes: [
       "CREATE INDEX idx_applications_status ON applications (status)",
@@ -253,6 +271,8 @@ export const collections: CollectionSpec[] = [
       },
       { type: "date", name: "occurred_at", required: true },
       { type: "json", name: "payload" },
+      { type: "autodate", name: "created", onCreate: true, onUpdate: false },
+      { type: "autodate", name: "updated", onCreate: true, onUpdate: true },
     ],
     indexes: [
       "CREATE INDEX idx_events_application ON events (application)",
@@ -300,6 +320,8 @@ export const collections: CollectionSpec[] = [
         maxSelect: 1,
         cascadeDelete: false,
       },
+      { type: "autodate", name: "created", onCreate: true, onUpdate: false },
+      { type: "autodate", name: "updated", onCreate: true, onUpdate: true },
     ],
     indexes: [
       "CREATE INDEX idx_jobs_status ON jobs (status)",

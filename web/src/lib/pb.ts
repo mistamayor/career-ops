@@ -2,27 +2,33 @@ import "server-only";
 
 /**
  * Server-only PocketBase client. Per PLAN.md §2 decision #8, the browser
- * never talks to PocketBase directly — every read goes through this module,
- * which authenticates as a superuser using env creds.
+ * never talks to PocketBase directly — every read and write goes through
+ * this module, which authenticates as a superuser using env creds.
  *
  * Typed via the `TypedPocketBase` alias emitted by pocketbase-typegen
  * (`src/lib/pb-types.ts`). Expand generics on the Response types give us
  * typed joins for relations we commonly fetch together (`cv_version` on
  * applications; `template` + `parent` on cv_versions).
  *
- * Create/update helpers are intentionally absent for Phase 0 — they land
- * alongside the features that need them in Phase 1 and Phase 2.
+ * Phase 0 write surface: application create + status change + generic patch.
+ * Kanban + New-Application flows live on top of these. Event-emitting writes
+ * (create, status change) record their own timeline entries; the caller
+ * does not need to.
  */
 
 import PocketBase from "pocketbase";
 import {
   Collections,
+  EventsTypeOptions,
   type ApplicationsResponse,
+  type ApplicationsStatusOptions,
+  type Create,
   type CvTemplatesResponse,
   type CvVersionsResponse,
   type EventsResponse,
   type JobsResponse,
   type TypedPocketBase,
+  type Update,
 } from "./pb-types";
 
 // ---------------------------------------------------------------------------
@@ -103,6 +109,7 @@ export async function listApplications(
   return pb
     .collection(Collections.Applications)
     .getFullList<ApplicationWithCvVersion>({
+      sort: "-created",
       ...options,
       expand: "cv_version",
     });
@@ -124,6 +131,7 @@ export async function listCvVersions(
   return pb
     .collection(Collections.CvVersions)
     .getFullList<CvVersionWithRelations>({
+      sort: "-created",
       ...options,
       expand: "template,parent",
     });
@@ -140,11 +148,10 @@ export async function listJobs(
   options: ListOptions = {},
 ): Promise<JobsResponse[]> {
   const pb = await getPb();
-  // No default sort: the jobs collection currently has no `created` autodate
-  // field (PocketBase v0.23+ treats autodates as opt-in and the Phase 0 schema
-  // didn't include them). Add a sort — likely by `started_at` — in Phase 3
-  // alongside the job runner, once that field is populated.
-  return pb.collection(Collections.Jobs).getFullList(options);
+  return pb.collection(Collections.Jobs).getFullList({
+    sort: "-created",
+    ...options,
+  });
 }
 
 export async function listEvents(
@@ -155,4 +162,123 @@ export async function listEvents(
     filter: pb.filter("application = {:appId}", { appId: applicationId }),
     sort: "-occurred_at",
   });
+}
+
+// ---------------------------------------------------------------------------
+// Write helpers — Phase 0 surface only (applications + their events).
+// ---------------------------------------------------------------------------
+
+export type ApplicationCreate = Create<"applications">;
+export type ApplicationUpdate = Update<"applications">;
+
+/**
+ * Create an application and an accompanying `created` timeline event.
+ *
+ * If the event write fails (e.g., transient PB hiccup), the application is
+ * still persisted — we log a warning and return the application. The event
+ * is strictly secondary to the record and can be reconstructed from the
+ * application's `created` timestamp in a later reconciliation pass.
+ */
+export async function createApplication(
+  data: ApplicationCreate,
+): Promise<ApplicationsResponse> {
+  const pb = await getPb();
+  const app = await pb
+    .collection(Collections.Applications)
+    .create<ApplicationsResponse>(data);
+
+  try {
+    await pb.collection(Collections.Events).create({
+      application: app.id,
+      type: EventsTypeOptions.created,
+      occurred_at: new Date().toISOString(),
+      payload: null,
+    });
+  } catch (err) {
+    console.warn(
+      `[pb] created application ${app.id} but failed to write created-event:`,
+      err instanceof Error ? err.message : err,
+    );
+  }
+
+  return app;
+}
+
+/**
+ * Change an application's status, emit a `status_changed` event, and
+ * (conditionally) stamp `applied_at` + emit an `applied` event when the
+ * new status is `applied` and `applied_at` wasn't set yet.
+ *
+ * Returns the updated record. Throws on the status update itself; secondary
+ * writes (events, applied_at backfill) are best-effort with warnings.
+ */
+export async function updateApplicationStatus(
+  id: string,
+  status: ApplicationsStatusOptions,
+): Promise<ApplicationsResponse> {
+  const pb = await getPb();
+
+  const existing = await pb
+    .collection(Collections.Applications)
+    .getOne<ApplicationsResponse>(id);
+  const oldStatus = existing.status;
+
+  const patch: ApplicationUpdate = { status };
+  const needsAppliedAtBackfill =
+    status === "applied" && (existing.applied_at ?? "") === "";
+  if (needsAppliedAtBackfill) {
+    patch.applied_at = new Date().toISOString();
+  }
+
+  const updated = await pb
+    .collection(Collections.Applications)
+    .update<ApplicationsResponse>(id, patch);
+
+  const now = new Date().toISOString();
+
+  try {
+    await pb.collection(Collections.Events).create({
+      application: id,
+      type: EventsTypeOptions.status_changed,
+      occurred_at: now,
+      payload: { from: oldStatus, to: status },
+    });
+  } catch (err) {
+    console.warn(
+      `[pb] status updated on ${id} but status_changed event failed:`,
+      err instanceof Error ? err.message : err,
+    );
+  }
+
+  if (status === "applied") {
+    try {
+      await pb.collection(Collections.Events).create({
+        application: id,
+        type: EventsTypeOptions.applied,
+        occurred_at: now,
+        payload: null,
+      });
+    } catch (err) {
+      console.warn(
+        `[pb] status=applied on ${id} but applied event failed:`,
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
+
+  return updated;
+}
+
+/**
+ * Generic patch — use for notes edits, pinned toggle, comp_range tweaks, etc.
+ * Does not emit timeline events; caller is responsible for any eventing.
+ */
+export async function updateApplication(
+  id: string,
+  patch: Partial<ApplicationUpdate>,
+): Promise<ApplicationsResponse> {
+  const pb = await getPb();
+  return pb
+    .collection(Collections.Applications)
+    .update<ApplicationsResponse>(id, patch);
 }
