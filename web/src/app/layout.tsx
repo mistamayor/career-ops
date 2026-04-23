@@ -29,7 +29,13 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      {/*
+       * `suppressHydrationWarning` covers attribute injections from browser
+       * extensions (password managers, autofill, Grammarly, etc.) that mutate
+       * <body> before React hydrates. Scoped to this element only — children
+       * still get full hydration validation.
+       */}
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {children}
         <Toaster />
       </body>
