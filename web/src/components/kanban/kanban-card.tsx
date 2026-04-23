@@ -45,16 +45,19 @@ function CardBody({
 }: {
   application: ApplicationWithCvVersion;
 }) {
+  // Deliberately NO onPointerDown handler here. The sortable wrapper spreads
+  // dnd-kit's `{...listeners}` onto the outer div, which includes an
+  // onPointerDown. React synthetic events bubble; if we stopped propagation
+  // on the Link, the outer div's listener would never fire and dnd-kit would
+  // never see a pointerdown — cards would look draggable but never move.
+  // Click-vs-drag distinction is handled at the PointerSensor level via the
+  // activationConstraint `distance: 5`: pointerup without movement lets the
+  // native click fire (Link navigates); movement >5px activates drag and
+  // suppresses the click.
   return (
     <Link
       href={`/applications/${application.id}`}
       className="block space-y-1.5"
-      onPointerDown={(e) => {
-        // Let the outer drag listeners handle drag initiation; the
-        // PointerSensor activation distance (5px) means a pure click stays a
-        // click, so Link navigation still works.
-        e.stopPropagation();
-      }}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
