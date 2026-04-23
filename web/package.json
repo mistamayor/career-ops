@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "pb:setup": "tsx scripts/setup-pocketbase.ts"
+    "pb:setup": "dotenv -e .env.local -- tsx scripts/setup-pocketbase.ts",
+    "pb:types": "dotenv -e .env.local -- sh -c 'pocketbase-typegen --url $NEXT_PUBLIC_POCKETBASE_URL --email $POCKETBASE_ADMIN_EMAIL --password $POCKETBASE_ADMIN_PASSWORD --out src/lib/pb-types.ts'",
+    "pb:seed": "dotenv -e .env.local -- tsx scripts/seed.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -29,6 +31,7 @@
     "react-markdown": "^10.1.0",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
+    "server-only": "^0.0.1",
     "shadcn": "^4.4.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
@@ -41,8 +44,10 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "pocketbase-typegen": "^1.5.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"
