@@ -24,6 +24,7 @@ These are settled. Revisiting requires an explicit change here with rationale.
 | 6 | **Career-ops fork stays unmodified except for the CV template fork-point** (which is being replaced entirely anyway — see #7). | Keeps upstream merges trivial. |
 | 7 | **Custom PDF generation lives in the web app, not in career-ops.** Career-ops emits tailored CV markdown only; web app renders to PDF via Playwright using Mayor-branded templates. | Unlocks multi-template support, live preview, per-application styling, and isolates us from upstream PDF changes. Design is from scratch. |
 | 8 | **Tailscale is the auth boundary.** No NextAuth, no Clerk, no user accounts. App binds to localhost or tailnet IP only. | Massive complexity saving; access list is literally the tailnet. |
+| 9 | **One surgical modification to career-ops `modes/pdf.md` to emit tailored CV markdown.** Approved under the decision #6 exception for the CV template fork-point. | Career-ops' default PDF pipeline doesn't persist tailored markdown to disk, only the PDF. Our sync layer (Phase 1) and custom PDF templates (Phase 2) both need the markdown. This is the minimum viable modification to unblock both phases. |
 
 ---
 
@@ -332,6 +333,7 @@ Append-only record of choices made during build. Date + rationale required.
 | 2026-04-23 | CV templates built from scratch, not inherited from career-ops | User dislikes Space Grotesk + DM Sans default |
 | 2026-04-23 | PLAN.md located at docs/project-plan/PLAN.md | Keeps repo root clean |
 | 2026-04-23 | Stack upgraded to Next.js 16 + React 19 + Tailwind v4 during Phase 0 scaffold | `create-next-app@latest` pulled current versions; all stable, App Router API compatible, Turbopack is now default — no reason to downgrade to 14 |
+| 2026-04-24 | Phase 1 architecture corrected: career-ops emits to `reports/*.md` and `output/*.pdf` by default; tailored CV markdown requires a one-line modification to `modes/pdf.md`. Tracker (`data/applications.md`) is ignored — the web Kanban is our tracker. | Discovered during Phase 1 kickoff that career-ops' default pipeline doesn't persist intermediate markdown or auto-append to the tracker. Rather than work around this in the web app, a surgical pdf.md modification unblocks both Phase 1 and Phase 2 cleanly. |
 
 ---
 
