@@ -267,7 +267,9 @@ Monorepo. The web app lives alongside career-ops in its own subdirectory so upst
 ```
 career-ops/                  (this fork)
 ├── <upstream files>         (unchanged — modes/, batch/, dashboard/, etc.)
-├── PLAN.md                  (this document)
+├── docs/                    (upstream; we add project-plan/ subdirectory only)
+│   └── project-plan/
+│       └── PLAN.md          (this document)
 ├── web/                     (new — our code)
 │   ├── package.json
 │   ├── next.config.js
@@ -294,7 +296,7 @@ career-ops/                  (this fork)
 └── .env.example             (new — our env vars, merges with upstream gracefully)
 ```
 
-The `web/` and `pb_migrations/` directories don't exist upstream, so `git pull upstream main` will never touch them.
+The `web/`, `pb_migrations/`, and `docs/project-plan/` paths don't exist upstream, so `git pull upstream main` will never touch them.
 
 ---
 
@@ -327,6 +329,7 @@ Append-only record of choices made during build. Date + rationale required.
 | 2026-04-23 | Project plan locked at v1 (this document) | Initial scope agreed between Mayor and Claude |
 | 2026-04-23 | PocketBase instance for career-ops live on US VPS :8094 | Follows existing muchobien/pocketbase Docker pattern |
 | 2026-04-23 | CV templates built from scratch, not inherited from career-ops | User dislikes Space Grotesk + DM Sans default |
+| 2026-04-23 | PLAN.md located at docs/project-plan/PLAN.md | Keeps repo root clean |
 
 ---
 
