@@ -140,10 +140,11 @@ export async function listJobs(
   options: ListOptions = {},
 ): Promise<JobsResponse[]> {
   const pb = await getPb();
-  return pb.collection(Collections.Jobs).getFullList({
-    sort: "-created",
-    ...options,
-  });
+  // No default sort: the jobs collection currently has no `created` autodate
+  // field (PocketBase v0.23+ treats autodates as opt-in and the Phase 0 schema
+  // didn't include them). Add a sort — likely by `started_at` — in Phase 3
+  // alongside the job runner, once that field is populated.
+  return pb.collection(Collections.Jobs).getFullList(options);
 }
 
 export async function listEvents(

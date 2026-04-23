@@ -1,8 +1,17 @@
-export default function Home() {
+import { AppShell } from "@/components/app-shell";
+import { listApplications } from "@/lib/pb";
+
+export default async function PipelinePage() {
+  const apps = await listApplications();
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-2 px-6 text-center">
-      <h1 className="text-4xl font-semibold tracking-tight">Career-Ops Web</h1>
-      <p className="text-muted-foreground text-lg">Phase 0 — foundation</p>
-    </main>
+    <AppShell title="Pipeline">
+      <div className="p-6">
+        <div className="text-muted-foreground rounded-md border border-dashed p-8 text-center text-sm">
+          Kanban lands in Prompt 5 — {apps.length} applications loaded from
+          PocketBase.
+        </div>
+      </div>
+    </AppShell>
   );
 }
