@@ -305,8 +305,9 @@ The `web/`, `pb_migrations/`, and `docs/project-plan/` paths don't exist upstrea
 Concrete choices — change requires a decision-log entry.
 
 - **Runtime:** Node.js 20 LTS
-- **Framework:** Next.js 14 App Router + TypeScript
-- **UI:** Tailwind + shadcn/ui + lucide-react icons
+- **Framework:** Next.js 16 App Router + TypeScript + Turbopack (dev default)
+- **React:** React 19
+- **UI:** Tailwind v4 + shadcn/ui + lucide-react icons
 - **Drag-drop:** dnd-kit (Kanban)
 - **Data:** PocketBase 0.36.7 (already deployed, port 8094 on US VPS)
 - **PB client:** official `pocketbase` JS SDK with TypeScript generics
@@ -330,6 +331,7 @@ Append-only record of choices made during build. Date + rationale required.
 | 2026-04-23 | PocketBase instance for career-ops live on US VPS :8094 | Follows existing muchobien/pocketbase Docker pattern |
 | 2026-04-23 | CV templates built from scratch, not inherited from career-ops | User dislikes Space Grotesk + DM Sans default |
 | 2026-04-23 | PLAN.md located at docs/project-plan/PLAN.md | Keeps repo root clean |
+| 2026-04-23 | Stack upgraded to Next.js 16 + React 19 + Tailwind v4 during Phase 0 scaffold | `create-next-app@latest` pulled current versions; all stable, App Router API compatible, Turbopack is now default — no reason to downgrade to 14 |
 
 ---
 
