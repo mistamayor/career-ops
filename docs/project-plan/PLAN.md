@@ -334,6 +334,7 @@ Append-only record of choices made during build. Date + rationale required.
 | 2026-04-23 | PLAN.md located at docs/project-plan/PLAN.md | Keeps repo root clean |
 | 2026-04-23 | Stack upgraded to Next.js 16 + React 19 + Tailwind v4 during Phase 0 scaffold | `create-next-app@latest` pulled current versions; all stable, App Router API compatible, Turbopack is now default — no reason to downgrade to 14 |
 | 2026-04-24 | Phase 1 architecture corrected: career-ops emits to `reports/*.md` and `output/*.pdf` by default; tailored CV markdown requires a one-line modification to `modes/pdf.md`. Tracker (`data/applications.md`) is ignored — the web Kanban is our tracker. | Discovered during Phase 1 kickoff that career-ops' default pipeline doesn't persist intermediate markdown or auto-append to the tracker. Rather than work around this in the web app, a surgical pdf.md modification unblocks both Phase 1 and Phase 2 cleanly. |
+| 2026-04-24 | Text fields carrying long-form content (evaluation reports, CV markdown, HTML templates, CSS, job logs) set to max=1,000,000 chars in pb-schema.ts | PocketBase's 5000-char default broke real-world career-ops output. Large max prevents future breakage and makes pb-schema.ts the durable source of truth. Short identifier fields keep the default. |
 
 ---
 
@@ -344,6 +345,7 @@ Track as we hit them. Resolve by adding to the Decisions Log above.
 - What's the canonical CV source-of-truth — `cv.md` in the repo, or a `cv_versions` record in PocketBase flagged as `source=base`? (Leaning: PocketBase, with an export-to-`cv.md` utility for when career-ops needs it on disk.)
 - Do we keep career-ops' `data/tracker.tsv` in sync (bidirectional) or just read from it? (Leaning: read-only; our write path is PocketBase.)
 - Template design direction — colour palette, typography, layout. To be resolved at start of Phase 2 via dedicated design review.
+- Company slug matching uses a pragmatic heuristic (`companySlugMatches`): exact match, or one slug is a hyphen-prefix of the other. This handles career-ops' convention of dropping corporate suffixes ("GlobalData Plc" → `globaldata` filename slug). Brittle for renames or pathological slugs; revisit if it bites. Introduced in commit 923e2157.
 
 ---
 

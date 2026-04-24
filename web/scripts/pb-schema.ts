@@ -116,8 +116,8 @@ export const collections: CollectionSpec[] = [
     fields: [
       { type: "text", name: "name", required: true },
       { type: "text", name: "slug", required: true },
-      { type: "text", name: "html_template", required: true },
-      { type: "text", name: "css", required: true },
+      { type: "text", name: "html_template", required: true, max: 1_000_000 },
+      { type: "text", name: "css", required: true, max: 1_000_000 },
       {
         type: "file",
         name: "preview_image",
@@ -157,7 +157,7 @@ export const collections: CollectionSpec[] = [
         maxSelect: 1,
         cascadeDelete: false,
       },
-      { type: "text", name: "markdown", required: true },
+      { type: "text", name: "markdown", required: true, max: 1_000_000 },
       {
         type: "file",
         name: "pdf",
@@ -186,8 +186,8 @@ export const collections: CollectionSpec[] = [
       { type: "text", name: "company", required: true },
       { type: "text", name: "role", required: true },
       { type: "url", name: "jd_url" },
-      // No max length — long-form JD paste can be many KB.
-      { type: "text", name: "jd_text" },
+      // Long-form JD paste — explicit 1M cap overrides PB's default 5000.
+      { type: "text", name: "jd_text", max: 1_000_000 },
       {
         type: "select",
         name: "jd_source",
@@ -221,9 +221,9 @@ export const collections: CollectionSpec[] = [
       { type: "text", name: "comp_range" },
       { type: "text", name: "location" },
       { type: "date", name: "applied_at" },
-      { type: "text", name: "evaluation_report_md" },
-      { type: "text", name: "evaluation_report_path" },
-      { type: "text", name: "notes" },
+      { type: "text", name: "evaluation_report_md", max: 1_000_000 },
+      { type: "text", name: "evaluation_report_path", max: 1_000_000 },
+      { type: "text", name: "notes", max: 1_000_000 },
       { type: "bool", name: "pinned" },
       { type: "autodate", name: "created", onCreate: true, onUpdate: false },
       { type: "autodate", name: "updated", onCreate: true, onUpdate: true },
@@ -308,9 +308,10 @@ export const collections: CollectionSpec[] = [
       },
       { type: "json", name: "input" },
       { type: "json", name: "output" },
-      // Unbounded text — stdout/stderr can grow during long evaluations.
-      { type: "text", name: "log" },
-      { type: "text", name: "error" },
+      // Long-form text — stdout/stderr can grow during evaluations; explicit
+      // 1M cap overrides PB's default 5000.
+      { type: "text", name: "log", max: 1_000_000 },
+      { type: "text", name: "error", max: 1_000_000 },
       { type: "date", name: "started_at" },
       { type: "date", name: "finished_at" },
       {
