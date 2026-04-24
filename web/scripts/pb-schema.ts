@@ -329,4 +329,31 @@ export const collections: CollectionSpec[] = [
       "CREATE INDEX idx_jobs_type ON jobs (type)",
     ],
   },
+
+  // Sync state — singleton row tracking the last sync run. Used by the
+  // topbar last-sync chip and the "Sync now" button.
+  {
+    name: "sync_state",
+    type: "base",
+    fields: [
+      { type: "date", name: "last_sync_at", required: true },
+      { type: "number", name: "last_sync_applications_created" },
+      { type: "number", name: "last_sync_applications_updated" },
+      { type: "number", name: "last_sync_applications_skipped" },
+      { type: "number", name: "last_sync_cv_versions_created" },
+      { type: "number", name: "last_sync_cv_versions_updated" },
+      { type: "number", name: "last_sync_cv_versions_skipped" },
+      { type: "number", name: "last_sync_errors" },
+      { type: "number", name: "last_sync_duration_ms" },
+      {
+        type: "select",
+        name: "last_sync_trigger",
+        required: true,
+        values: ["manual", "watch", "cli"],
+        maxSelect: 1,
+      },
+      { type: "autodate", name: "created", onCreate: true, onUpdate: false },
+      { type: "autodate", name: "updated", onCreate: true, onUpdate: true },
+    ],
+  },
 ];

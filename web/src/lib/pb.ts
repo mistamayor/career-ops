@@ -164,6 +164,20 @@ export async function listEvents(
   });
 }
 
+/**
+ * Read the singleton `sync_state` row, or null if no sync has run yet.
+ * Used by the topbar last-sync indicator.
+ */
+export async function getSyncState(): Promise<
+  import("./pb-types").SyncStateResponse | null
+> {
+  const pb = await getPb();
+  const all = await pb
+    .collection(Collections.SyncState)
+    .getFullList<import("./pb-types").SyncStateResponse>();
+  return all[0] ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Write helpers — Phase 0 surface only (applications + their events).
 // ---------------------------------------------------------------------------

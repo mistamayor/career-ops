@@ -1,5 +1,9 @@
+import { formatDistanceToNow } from "date-fns";
+
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { getSyncState } from "@/lib/pb";
 
 import { MobileNav } from "./mobile-nav";
 import { NavItemList } from "./sidebar-nav";
@@ -88,19 +92,54 @@ function SidebarFooter() {
   );
 }
 
-function Topbar({ title }: { title: string }) {
+async function Topbar({ title }: { title: string }) {
   return (
     <header className="bg-background flex h-14 items-center gap-3 border-b px-4">
       <MobileNav />
       <h1 className="truncate text-sm font-medium">{title}</h1>
-      <div className="ml-auto w-full max-w-xs">
-        <Input
-          type="search"
-          placeholder="Search applications… (coming in v2)"
-          disabled
-          aria-label="Search"
-        />
+      <div className="ml-auto flex items-center gap-3">
+        <LastSyncChip />
+        <div className="w-full max-w-xs">
+          <Input
+            type="search"
+            placeholder="Search applications… (coming in v2)"
+            disabled
+            aria-label="Search"
+          />
+        </div>
       </div>
     </header>
+  );
+}
+
+async function LastSyncChip() {
+  const state = await getSyncState().catch(() => null);
+  if (!state) {
+    return (
+      <span className="text-muted-foreground hidden text-xs md:inline">
+        Never synced
+      </span>
+    );
+  }
+  const when = formatDistanceToNow(new Date(state.last_sync_at), {
+    addSuffix: true,
+  });
+  const hasErrors = state.last_sync_errors > 0;
+  return (
+    <span
+      className={cn(
+        "hidden items-center gap-1.5 text-xs md:inline-flex",
+        hasErrors ? "text-red-600" : "text-muted-foreground",
+      )}
+      title={`${state.last_sync_trigger} · ${state.last_sync_duration_ms}ms`}
+    >
+      {hasErrors && (
+        <span
+          aria-hidden
+          className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"
+        />
+      )}
+      Last sync: {when}
+    </span>
   );
 }

@@ -18,6 +18,7 @@ import type {
   CvTemplatesResponse,
   CvVersionsResponse,
   EventsResponse,
+  SyncStateResponse,
   TypedPocketBase,
 } from "@/lib/pb-types";
 
@@ -25,7 +26,8 @@ type Stored =
   | ApplicationsResponse
   | CvVersionsResponse
   | EventsResponse
-  | CvTemplatesResponse;
+  | CvTemplatesResponse
+  | SyncStateResponse;
 
 type AnyPayload = Record<string, unknown>;
 
@@ -34,6 +36,7 @@ export type FakePbState = {
   cv_versions: CvVersionsResponse[];
   events: EventsResponse[];
   cv_templates: CvTemplatesResponse[];
+  sync_state: SyncStateResponse[];
 };
 
 export type FakePbHandle = {
@@ -92,6 +95,7 @@ export function makeFakePb(seed: Partial<FakePbState> = {}): FakePbHandle {
     cv_versions: [...(seed.cv_versions ?? [])],
     events: [...(seed.events ?? [])],
     cv_templates: [...(seed.cv_templates ?? [])],
+    sync_state: [...(seed.sync_state ?? [])],
   };
   const idCounter = { n: 0 };
 
@@ -161,7 +165,8 @@ export function makeFakePb(seed: Partial<FakePbState> = {}): FakePbHandle {
         name === "applications" ||
         name === "cv_versions" ||
         name === "events" ||
-        name === "cv_templates"
+        name === "cv_templates" ||
+        name === "sync_state"
       ) {
         return coll(name) as unknown as ReturnType<TypedPocketBase["collection"]>;
       }
@@ -181,6 +186,7 @@ export function makeFakePb(seed: Partial<FakePbState> = {}): FakePbHandle {
       state.cv_versions.length = 0;
       state.events.length = 0;
       state.cv_templates.length = 0;
+      state.sync_state.length = 0;
       idCounter.n = 0;
     },
   };

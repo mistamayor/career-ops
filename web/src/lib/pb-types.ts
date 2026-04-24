@@ -16,6 +16,7 @@ export const Collections = {
 	CvVersions: "cv_versions",
 	Events: "events",
 	Jobs: "jobs",
+	SyncState: "sync_state",
 	Users: "users",
 } as const
 export type Collections = typeof Collections[keyof typeof Collections]
@@ -224,6 +225,28 @@ export type JobsRecord<Tinput = unknown, Toutput = unknown> = {
 	updated: IsoAutoDateString
 }
 
+export const SyncStateLastSyncTriggerOptions = {
+	"manual": "manual",
+	"watch": "watch",
+	"cli": "cli",
+} as const
+export type SyncStateLastSyncTriggerOptions = typeof SyncStateLastSyncTriggerOptions[keyof typeof SyncStateLastSyncTriggerOptions]
+export type SyncStateRecord = {
+	created: IsoAutoDateString
+	id: string
+	last_sync_applications_created?: number
+	last_sync_applications_skipped?: number
+	last_sync_applications_updated?: number
+	last_sync_at: IsoDateString
+	last_sync_cv_versions_created?: number
+	last_sync_cv_versions_skipped?: number
+	last_sync_cv_versions_updated?: number
+	last_sync_duration_ms?: number
+	last_sync_errors?: number
+	last_sync_trigger: SyncStateLastSyncTriggerOptions
+	updated: IsoAutoDateString
+}
+
 export type UsersRecord = {
 	avatar?: FileNameString
 	created: IsoAutoDateString
@@ -248,6 +271,7 @@ export type CvTemplatesResponse<Texpand = unknown> = Required<CvTemplatesRecord>
 export type CvVersionsResponse<Texpand = unknown> = Required<CvVersionsRecord> & BaseSystemFields<Texpand>
 export type EventsResponse<Tpayload = unknown, Texpand = unknown> = Required<EventsRecord<Tpayload>> & BaseSystemFields<Texpand>
 export type JobsResponse<Tinput = unknown, Toutput = unknown, Texpand = unknown> = Required<JobsRecord<Tinput, Toutput>> & BaseSystemFields<Texpand>
+export type SyncStateResponse<Texpand = unknown> = Required<SyncStateRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
@@ -263,6 +287,7 @@ export type CollectionRecords = {
 	cv_versions: CvVersionsRecord
 	events: EventsRecord
 	jobs: JobsRecord
+	sync_state: SyncStateRecord
 	users: UsersRecord
 }
 
@@ -277,6 +302,7 @@ export type CollectionResponses = {
 	cv_versions: CvVersionsResponse
 	events: EventsResponse
 	jobs: JobsResponse
+	sync_state: SyncStateResponse
 	users: UsersResponse
 }
 

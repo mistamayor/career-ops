@@ -186,11 +186,11 @@ Each phase leaves the system in a fully working state. No dead code between phas
 
 **Acceptance:** You can create, view, and move applications manually via browser. No career-ops integration, no AI.
 
-### Phase 1 — Sync Layer (CLI-first mode)
+### Phase 1 — Sync Layer (CLI-first mode) ✅ COMPLETE
 
 **Goal:** Career-ops runs in terminal as normal; web app reflects its output.
 
-- [ ] Parser for `data/tracker.tsv` → array of application records
+- [x] ~~Parser for `data/tracker.tsv`~~ — replaced by `parseReport` (reports/*.md). Tracker deprecated per 2026-04-24 decision; the web Kanban is the canonical tracker.
 - [ ] Parser for `reports/*.md` → structured extraction (score, archetype, comp, summary)
 - [ ] Parser for tailored CV markdown files → `cv_versions` records
 - [ ] Sync service: scans career-ops dirs on schedule (30s) and on file-change events (chokidar)
@@ -335,6 +335,7 @@ Append-only record of choices made during build. Date + rationale required.
 | 2026-04-23 | Stack upgraded to Next.js 16 + React 19 + Tailwind v4 during Phase 0 scaffold | `create-next-app@latest` pulled current versions; all stable, App Router API compatible, Turbopack is now default — no reason to downgrade to 14 |
 | 2026-04-24 | Phase 1 architecture corrected: career-ops emits to `reports/*.md` and `output/*.pdf` by default; tailored CV markdown requires a one-line modification to `modes/pdf.md`. Tracker (`data/applications.md`) is ignored — the web Kanban is our tracker. | Discovered during Phase 1 kickoff that career-ops' default pipeline doesn't persist intermediate markdown or auto-append to the tracker. Rather than work around this in the web app, a surgical pdf.md modification unblocks both Phase 1 and Phase 2 cleanly. |
 | 2026-04-24 | Text fields carrying long-form content (evaluation reports, CV markdown, HTML templates, CSS, job logs) set to max=1,000,000 chars in pb-schema.ts | PocketBase's 5000-char default broke real-world career-ops output. Large max prevents future breakage and makes pb-schema.ts the durable source of truth. Short identifier fields keep the default. |
+| 2026-04-24 | Phase 1 complete: chokidar watcher with 2s debounce + manual Server Action for browser-triggered sync. Sync state persisted in a dedicated `sync_state` collection (singleton row). | Debounce coalesces career-ops' multi-file bursts into one sync. Singleton collection avoids a separate store for something PB can already handle. |
 
 ---
 
@@ -346,6 +347,7 @@ Track as we hit them. Resolve by adding to the Decisions Log above.
 - Do we keep career-ops' `data/tracker.tsv` in sync (bidirectional) or just read from it? (Leaning: read-only; our write path is PocketBase.)
 - Template design direction — colour palette, typography, layout. To be resolved at start of Phase 2 via dedicated design review.
 - Company slug matching uses a pragmatic heuristic (`companySlugMatches`): exact match, or one slug is a hyphen-prefix of the other. This handles career-ops' convention of dropping corporate suffixes ("GlobalData Plc" → `globaldata` filename slug). Brittle for renames or pathological slugs; revisit if it bites. Introduced in commit 923e2157.
+- `setup-pocketbase.ts` currently diffs fields by name only and ignores constraint changes (max, min, pattern). Adequate for v1 additive schema. Revisit if a future change requires tightening existing constraints. Flagged by Claude Code in commit 069a9336.
 
 ---
 

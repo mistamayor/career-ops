@@ -11,6 +11,7 @@
     "pb:types": "dotenv -e .env.local -- sh -c 'pocketbase-typegen --url $NEXT_PUBLIC_POCKETBASE_URL --email $POCKETBASE_ADMIN_EMAIL --password $POCKETBASE_ADMIN_PASSWORD --out src/lib/pb-types.ts'",
     "pb:seed": "dotenv -e .env.local -- tsx scripts/seed.ts",
     "sync": "dotenv -e .env.local -- tsx src/lib/career-ops-sync/cli-sync.ts",
+    "sync:watch": "dotenv -e .env.local -- tsx src/lib/career-ops-sync/cli-watch.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"
@@ -21,6 +22,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
+    "chokidar": "^5.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
