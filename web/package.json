@@ -10,6 +10,7 @@
     "pb:setup": "dotenv -e .env.local -- tsx scripts/setup-pocketbase.ts",
     "pb:types": "dotenv -e .env.local -- sh -c 'pocketbase-typegen --url $NEXT_PUBLIC_POCKETBASE_URL --email $POCKETBASE_ADMIN_EMAIL --password $POCKETBASE_ADMIN_PASSWORD --out src/lib/pb-types.ts'",
     "pb:seed": "dotenv -e .env.local -- tsx scripts/seed.ts",
+    "sync": "dotenv -e .env.local -- tsx src/lib/career-ops-sync/cli-sync.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"

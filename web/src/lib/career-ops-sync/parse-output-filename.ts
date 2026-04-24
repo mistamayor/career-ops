@@ -4,27 +4,43 @@
  *     cv-{candidateSlug}-{companySlug}-{YYYY-MM-DD}.{pdf|md}
  *
  * where both slugs are kebab-case (lowercase letters, numbers, hyphens).
- * Because both slugs may contain hyphens, the split is disambiguated
- * BACKWARDS: the last 10 characters before the extension must be the
- * date, and the LAST hyphen of the remaining middle chunk separates
- * candidate (left) from company (right).
  *
- * This heuristic handles the common case (single-word companies like
- * "globaldata", "anthropic", multi-word candidates like "mayowa-adeogun")
- * but fails for multi-word companies ("scale-ai"): the company slug
- * becomes just "ai" and the extra word gets absorbed into the candidate.
- * That's documented in the tests and left unresolved for Phase 1 — can
- * be revisited with a candidate allowlist if real data hits it.
+ * Two resolution strategies, in order:
+ *
+ * 1. **Known-slug match (preferred)**: when `options.knownCompanySlugs` is
+ *    provided, we try each slug longest-first and accept the first exact
+ *    match. This is the only reliable way to handle multi-word companies
+ *    (`scale-ai`, `open-ai`, etc.) — the sync layer loads this list from
+ *    existing PocketBase applications before calling us.
+ *
+ * 2. **Backwards last-hyphen heuristic (fallback)**: the last 10 characters
+ *    before the extension must be the date; the LAST hyphen of the middle
+ *    chunk separates candidate (left) from company (right). Works for
+ *    single-token companies, wrong for multi-word ones.
  *
  * @example
  *   parseOutputFilename("cv-mayowa-adeogun-globaldata-2026-04-24.pdf")
- *   //   → { ok: true, value: { candidateSlug: "mayowa-adeogun", companySlug: "globaldata", date: "2026-04-24", kind: "pdf" } }
+ *   // → { ok: true, value: { candidateSlug: "mayowa-adeogun", companySlug: "globaldata", ... } }
+ *
+ *   parseOutputFilename(
+ *     "cv-mayowa-adeogun-scale-ai-2026-04-24.pdf",
+ *     { knownCompanySlugs: ["scale-ai"] },
+ *   );
+ *   // → { ok: true, value: { candidateSlug: "mayowa-adeogun", companySlug: "scale-ai", ... } }
  */
 
 import type { ParsedOutputFilename, ParseResult } from "./types";
 
 const SLUG_CHAR_RE = /^[a-z0-9-]+$/;
 const DATE_ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export type ParseOutputFilenameOptions = {
+  /**
+   * Slugs of companies we already know about (typically fetched from PB
+   * applications at sync time). Disambiguates multi-word company slugs.
+   */
+  knownCompanySlugs?: readonly string[];
+};
 
 function err(file: string, reason: string): ParseResult<ParsedOutputFilename> {
   return { ok: false, error: { kind: "ParseError", file, reason } };
@@ -33,12 +49,15 @@ function err(file: string, reason: string): ParseResult<ParsedOutputFilename> {
 /**
  * Parse an `output/cv-*-*-*.pdf` or `.md` filename. Returns a
  * `ParseResult` containing kind, candidate slug, company slug, and date.
- * Logs a `console.warn` if the resulting candidate slug has no hyphens —
- * that's unusual (most names are "first-last") and may signal a wrong
- * split on a multi-word-company input.
+ *
+ * Pass `options.knownCompanySlugs` when available — it short-circuits the
+ * fallback heuristic and reliably handles multi-word company slugs.
+ * Without it, a `console.warn` fires when the candidate slug looks suspect
+ * (no hyphens) — often the symptom of a missed multi-word-company case.
  */
 export function parseOutputFilename(
   filename: string,
+  options: ParseOutputFilenameOptions = {},
 ): ParseResult<ParsedOutputFilename> {
   // Extension + kind.
   let kind: "pdf" | "markdown";
@@ -76,7 +95,32 @@ export function parseOutputFilename(
     return err(filename, "empty candidate/company chunk");
   }
 
-  // Split the middle chunk on the LAST hyphen: candidate-slug | company-slug.
+  // Strategy 1: try known company slugs (longest first) to disambiguate
+  // multi-word kebab companies cleanly before falling back to the
+  // last-hyphen heuristic.
+  const knownSlugs = options.knownCompanySlugs;
+  if (knownSlugs && knownSlugs.length > 0) {
+    const sorted = [...knownSlugs].sort((a, b) => b.length - a.length);
+    for (const companyCandidate of sorted) {
+      const suffix = `-${companyCandidate}`;
+      if (!nameChunk.endsWith(suffix)) continue;
+      const candidateSlug = nameChunk.slice(0, -suffix.length);
+      if (candidateSlug === "" || !SLUG_CHAR_RE.test(candidateSlug)) continue;
+      if (!SLUG_CHAR_RE.test(companyCandidate)) continue;
+      return {
+        ok: true,
+        value: {
+          filename,
+          kind,
+          candidateSlug,
+          companySlug: companyCandidate,
+          date,
+        },
+      };
+    }
+  }
+
+  // Strategy 2: split the middle chunk on the LAST hyphen: candidate-slug | company-slug.
   const lastHyphenIdx = nameChunk.lastIndexOf("-");
   if (lastHyphenIdx === -1) {
     return err(

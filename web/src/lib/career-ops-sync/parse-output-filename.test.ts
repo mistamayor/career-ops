@@ -40,20 +40,60 @@ describe("parseOutputFilename: happy paths", () => {
     }
   });
 
-  it("documents the multi-word-company limitation of the backwards split", () => {
-    // Known limitation: the backwards-split heuristic ALWAYS takes the
-    // rightmost hyphen as the candidate/company boundary. For a multi-word
-    // company like "scale-ai", the "scale" token gets absorbed into the
-    // candidate slug and the company becomes just "ai".
-    //
-    // Documenting this behaviour in a test so that if/when we revisit this
-    // (e.g. with a companies allowlist or explicit separator), we'll flip
-    // this test from asserting the wrong split to asserting the correct one.
-    const r = parseOutputFilename("cv-mayowa-adeogun-scale-ai-2026-04-24.pdf");
+  it("uses knownCompanySlugs to disambiguate multi-word companies (correct split)", () => {
+    // The sync layer passes knownCompanySlugs loaded from PocketBase
+    // applications. With it, the parser picks the longest-matching known
+    // company slug from the right-hand side and cleanly separates
+    // candidate from company.
+    const r = parseOutputFilename(
+      "cv-mayowa-adeogun-scale-ai-2026-04-24.pdf",
+      { knownCompanySlugs: ["scale-ai", "globaldata"] },
+    );
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.value.candidateSlug).toBe("mayowa-adeogun-scale");
-    expect(r.value.companySlug).toBe("ai");
+    expect(r.value.candidateSlug).toBe("mayowa-adeogun");
+    expect(r.value.companySlug).toBe("scale-ai");
+  });
+
+  it("falls back to the backwards heuristic when no known slugs match", () => {
+    // Without knownCompanySlugs, or when the filename's company isn't in
+    // the known list, the last-hyphen heuristic is retained. This keeps
+    // behaviour predictable on the first sync of a brand-new company.
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const r = parseOutputFilename("cv-mayowa-adeogun-scale-ai-2026-04-24.pdf");
+      expect(r.ok).toBe(true);
+      if (!r.ok) return;
+      expect(r.value.candidateSlug).toBe("mayowa-adeogun-scale");
+      expect(r.value.companySlug).toBe("ai");
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it("longest known slug wins when multiple are prefixes of each other", () => {
+    // Defensive ordering check: if "ai" and "scale-ai" are both in the
+    // allowlist, the longer match must win (otherwise we'd pick "ai" and
+    // leak the "scale" token back into the candidate).
+    const r = parseOutputFilename(
+      "cv-mayowa-adeogun-scale-ai-2026-04-24.pdf",
+      { knownCompanySlugs: ["ai", "scale-ai"] },
+    );
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.companySlug).toBe("scale-ai");
+    expect(r.value.candidateSlug).toBe("mayowa-adeogun");
+  });
+
+  it("falls through to the heuristic when knownCompanySlugs doesn't include the company", () => {
+    const r = parseOutputFilename(
+      "cv-mayowa-adeogun-globaldata-2026-04-24.pdf",
+      { knownCompanySlugs: ["scale-ai", "anthropic"] },
+    );
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.companySlug).toBe("globaldata");
+    expect(r.value.candidateSlug).toBe("mayowa-adeogun");
   });
 });
 
