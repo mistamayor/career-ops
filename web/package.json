@@ -9,7 +9,10 @@
     "lint": "eslint",
     "pb:setup": "dotenv -e .env.local -- tsx scripts/setup-pocketbase.ts",
     "pb:types": "dotenv -e .env.local -- sh -c 'pocketbase-typegen --url $NEXT_PUBLIC_POCKETBASE_URL --email $POCKETBASE_ADMIN_EMAIL --password $POCKETBASE_ADMIN_PASSWORD --out src/lib/pb-types.ts'",
-    "pb:seed": "dotenv -e .env.local -- tsx scripts/seed.ts"
+    "pb:seed": "dotenv -e .env.local -- tsx scripts/seed.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -20,6 +23,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "gray-matter": "^4.0.3",
     "lucide-react": "^1.8.0",
     "next": "16.2.4",
     "next-themes": "^0.4.6",
@@ -43,6 +47,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/ui": "^4.1.5",
     "dotenv": "^17.4.2",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9",
@@ -50,6 +55,7 @@
     "pocketbase-typegen": "^1.5.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.5"
   }
 }
