@@ -15,7 +15,9 @@ import type { ParsedReport, ParseResult } from "./types";
 // ---------------------------------------------------------------------------
 
 const SEQ_FROM_FILENAME_RE = /^(\d{3})-/;
-const FIRST_LINE_RE = /^# Evaluation: (.+)$/;
+// Career-ops emits reports in either English ("# Evaluation: …") or
+// Spanish ("# Evaluación: …") depending on the JD's detected language.
+const FIRST_LINE_RE = /^# (?:Evaluation|Evaluación): (.+)$/;
 // Bolded key/value line, e.g. `**Date:** 2026-04-23`. Key may contain spaces.
 const HEADER_LINE_RE = /^\*\*([^*:]+):\*\*\s*(.*)$/;
 // Score value shape, e.g. `4.2/5` or `4/5`.
@@ -142,8 +144,10 @@ export function parseReport(
 
   const kvs = parseHeaderKvs(lines.slice(1, 20));
 
-  const dateRaw = kvs["Date"];
-  if (!dateRaw) return err(filename, "missing `**Date:**` header");
+  // Accept either the English ("Date") or Spanish ("Fecha") key. Same
+  // treatment applied to "Archetype" / "Arquetipo" below.
+  const dateRaw = kvs["Date"] ?? kvs["Fecha"];
+  if (!dateRaw) return err(filename, "missing `**Date:**` / `**Fecha:**` header");
   if (!DATE_ISO_RE.test(dateRaw)) {
     return err(filename, `Date must be ISO YYYY-MM-DD, got ${JSON.stringify(dateRaw)}`);
   }
@@ -159,7 +163,7 @@ export function parseReport(
     return err(filename, `Score out of range 0–5: ${score}`);
   }
 
-  const archetype = kvs["Archetype"] ?? "";
+  const archetype = kvs["Archetype"] ?? kvs["Arquetipo"] ?? "";
   const urlRaw = (kvs["URL"] ?? "").trim();
   const legitRaw = (kvs["Legitimacy"] ?? "").trim();
 

@@ -68,6 +68,28 @@ describe("parseReport: real GlobalData fixture", () => {
   });
 });
 
+describe("parseReport: Spanish-language report (Peaple Talent fixture)", () => {
+  const content = readFileSync(
+    join(__dirname, "__fixtures__", "report-002-peaple-talent.md"),
+    "utf8",
+  );
+  const result = parseReport(
+    "002-peaple-talent-head-of-tech-lincoln-2026-04-24.md",
+    content,
+  );
+
+  it("accepts `# Evaluación:` header + Spanish/English mixed keys", () => {
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.error.reason);
+    expect(result.value.sequenceNumber).toBe(2);
+    expect(result.value.company).toBe("Peaple Talent (hidden client, Lincoln)");
+    expect(result.value.role).toBe("Head of Technology");
+    expect(result.value.date).toBe("2026-04-24");
+    expect(result.value.score).toBe(3.9);
+    expect(result.value.archetype).toMatch(/Head of IT/);
+  });
+});
+
 describe("parseReport: error paths", () => {
   it("errors when filename lacks the NNN- prefix", () => {
     const r = parseReport("globaldata.md", "# Evaluation: X — Y\n");

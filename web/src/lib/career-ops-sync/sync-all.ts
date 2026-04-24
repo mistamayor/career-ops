@@ -202,6 +202,13 @@ function accumulate(result: SyncAllResult, one: SyncOneResult): void {
 }
 
 function logSummary(result: SyncAllResult): void {
+  // Dump each error BEFORE the summary so the filename + reason are
+  // greppable above the aggregate count. Silent `errors=N` lines with no
+  // detail were a real pain to diagnose when Peaple Talent hit a parser
+  // bug during Phase 1.
+  for (const err of result.errors) {
+    console.error(`[sync:error] ${err.file}: ${err.reason}`);
+  }
   const a = result.applications;
   const v = result.cvVersions;
   console.log(
